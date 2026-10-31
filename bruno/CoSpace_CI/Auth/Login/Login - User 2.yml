@@ -1,7 +1,7 @@
 info:
-  name: User Login
+  name: Login - User 2
   type: http
-  seq: 2
+  seq: 6
 
 http:
   method: POST
@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-          "email": "{{userEmail}}",
-          "password": "{{allUserPassword}}"
+        "email": "user2@test.com",
+        "password": "password123"
       }
   auth: inherit
 
@@ -19,10 +19,12 @@ runtime:
   scripts:
     - type: after-response
       code: |-
-        const body = res.getBody();
+        test("Login success, 200 OK", function () {
+          expect(res.status).to.equal(200);
+        });
 
-        if (res.getStatus() === 200 && body.token) {
-          bru.setVar("token", body.token);
+        if (res.status === 200) {
+          bru.setVar("user2Token", res.body.token);
         }
 
 settings:
