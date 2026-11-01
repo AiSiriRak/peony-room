@@ -31,10 +31,7 @@ const errorHandler = (err, req, res, next) => {
             keys.includes('bookingDateString')
         ) {
             message = MSG.COWORKING_SPACE_ALREADY_RESERVED;
-        } else if (
-            keys.includes('reservation') &&
-            keys.includes('recipient')
-        ) {
+        } else if (keys.includes('reservation') && keys.includes('recipient')) {
             message = MSG.USER_ALREADY_INVITED;
         } else {
             message = MSG.DUPLICATE_KEY;
