@@ -6,14 +6,14 @@ const errorHandler = require('./middleware/error');
 
 const line = require('@line/bot-sdk');
 const { handleWebhook } = require('./controllers/line');
-const lineRoutes = require('./routes/line');
-// const { startReminderJob } = require('./utils/reminder');
+const initReminderWorker = require('./workers/reminderWorker');
 
 // Route files
 const auth = require('./routes/auth');
 const coworkingSpaces = require('./routes/coworkingSpaces');
 const reservations = require('./routes/reservations');
 const invitations = require('./routes/invitations');
+const lineRoutes = require('./routes/line');
 
 // Load env vars
 dotenv.config({ path: './src/config/config.env' });
@@ -52,6 +52,9 @@ app.use(`${API_VER}/invitations`, invitations);
 app.use(`${API_VER}/line`, lineRoutes);
 
 app.use(errorHandler);
+
+// Init line reminder worker
+// initReminderWorker();
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(

@@ -44,37 +44,6 @@ const handleEvent = async (event) => {
     const lineUserId = event.source.userId;
     const linkedUser = await User.findOne({ lineUserId });
 
-    // *********** FOR TESTING ONLY ************* //
-    // Send reminder to user
-    const testCowork = {
-        name: 'Co name Test',
-        address: '67/67, next world province, 00000',
-        telephoneNumber: '123-456-7890',
-        openTime: '08:00',
-        closeTime: '16.00',
-        maximumCapacity: 3,
-    };
-    const testReserv = {
-        reserveDate: '2022-01-01',
-    };
-    if (/^test reminder$/i.test(event.message.text.trim()))
-        return reminderBubble(event.replyToken, testCowork, testReserv, 3);
-    if (/^test invite$/i.test(event.message.text.trim()))
-        return inviteBubble(
-            event.replyToken,
-            testCowork,
-            testReserv,
-            'test user',
-        );
-    if (/^test reserv$/i.test(event.message.text.trim()))
-        return reservationBubble(
-            event.replyToken,
-            testCowork,
-            testReserv,
-            'created',
-        );
-    // ****************************************** //
-
     // If user already linked Line account
     if (linkedUser) {
         return replyText(
