@@ -1,6 +1,12 @@
 const crypto = require('crypto');
 const User = require('../models/User');
-const { replyText, reminderBubble, ADD_LINE_LINK } = require('../utils/line');
+const {
+    replyText,
+    reminderBubble,
+    ADD_LINE_LINK,
+    inviteBubble,
+    reservationBubble,
+} = require('../utils/line');
 
 // @route   POST /api/v1/line/link-code
 // @access  Private
@@ -37,18 +43,6 @@ const handleEvent = async (event) => {
     // Check whether this LINE account is already linked
     const lineUserId = event.source.userId;
     const linkedUser = await User.findOne({ lineUserId });
-
-    // ** FOR TESTING ONLY ** //
-    // Send reminder to user
-    if (/^test$/i.test(event.message.text.trim()))
-        return reminderBubble(
-            lineUserId,
-            'Co name',
-            'Reservation in 3 Days',
-            '12-10-69',
-            '08:00 - 16:00',
-            'https://youtu.be/dQw4w9WgXcQ?si=VBvSda7M2Tj3W62h',
-        );
 
     // If user already linked Line account
     if (linkedUser) {

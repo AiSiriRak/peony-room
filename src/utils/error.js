@@ -42,6 +42,10 @@ const MSG = {
 
     // 500 Internal Server Error
     SERVER_ERROR: 'Internal server error',
+
+    // Line error
+    CANT_SEND_LINE_MSG: (id) =>
+        `Failed to send LINE notification to user ${id}:`,
 };
 
 module.exports = {

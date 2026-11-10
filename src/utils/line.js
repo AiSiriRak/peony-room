@@ -1,6 +1,8 @@
 const line = require('@line/bot-sdk');
+const User = require('../models/User');
 
 const ADD_LINE_LINK = 'https://lin.ee/Qp3cqaj';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
 
 let client;
 const getClient = () => {
@@ -12,133 +14,250 @@ const getClient = () => {
     return client;
 };
 
+const getRecipientLineIds = async (reservation, mainUserId) => {
+    const mainUser = await User.findById(mainUserId);
+    await reservation.populate('cobooker');
+
+    const recipients = [mainUser, ...(reservation.cobooker || [])];
+
+    return [...new Set(recipients.map((u) => u?.lineUserId).filter(Boolean))];
+};
+
 // For pushing normal text
-exports.pushText = (to, text) => {
-    getClient().pushMessage({ to, messages: [{ type: 'text', text }] });
+const pushText = async (to, text) => {
+    try {
+        return await getClient().pushMessage({
+            to,
+            messages: [{ type: 'text', text }],
+        });
+    } catch (error) {
+        console.error(
+            'LINE Push Message Error:',
+            error.response ? error.response.data : error.message,
+        );
+        throw error;
+    }
 };
 
 // For Reply user's message
-exports.replyText = (replyToken, text) => {
-    getClient().replyMessage({
-        replyToken,
-        messages: [{ type: 'text', text }],
-    });
+const replyText = async (replyToken, text) => {
+    try {
+        return await getClient().replyMessage({
+            replyToken,
+            messages: [{ type: 'text', text }],
+        });
+    } catch (error) {
+        console.error(
+            'LINE reply Message Error:',
+            error.response ? error.response.data : error.message,
+        );
+        throw error;
+    }
 };
 
-// For send reminder to user.
+// For sending reminder before reservation date.
 // Use in this format :
-// reminderBubble({UserLineId}, "Co name", "Reservation in 3 Days", "12-10-69", "08:00 - 16:00", {reservationInfoUrl})
-exports.reminderBubble = (
-    to,
-    coworkingSpaceName,
-    reservationMsg,
-    date,
-    time,
-    url,
-) => {
-    getClient().pushMessage({
+// reminderBubble({UserLineId}, coworkingSpace data, reservation data, 3)
+const reminderBubble = (to, coworkingSpace, reservation, days) => {
+    return notiBubble(
         to,
-        messages: [
-            {
-                type: 'flex',
-                altText: 'reminder message',
-                contents: {
-                    type: 'bubble',
-                    body: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            {
-                                type: 'text',
-                                text: '⏰ Reminder ⏰',
-                                decoration: 'none',
-                                color: '#a15c86',
-                            },
-                            {
-                                type: 'text',
-                                text: coworkingSpaceName,
-                                weight: 'bold',
-                                size: 'xxl',
-                                margin: 'sm',
-                            },
-                            {
-                                type: 'text',
-                                text: reservationMsg,
-                                weight: 'regular',
-                                size: 'xl',
-                                margin: 'none',
-                            },
-                            {
-                                type: 'box',
-                                layout: 'vertical',
-                                margin: 'lg',
-                                spacing: 'sm',
-                                contents: [
-                                    {
-                                        type: 'box',
-                                        layout: 'baseline',
-                                        spacing: 'sm',
-                                        contents: [
-                                            {
-                                                type: 'text',
-                                                text: 'Date',
-                                                color: '#aaaaaa',
-                                                size: 'sm',
-                                                flex: 1,
-                                            },
-                                            {
-                                                type: 'text',
-                                                text: date,
-                                                wrap: true,
-                                                color: '#666666',
-                                                size: 'sm',
-                                                flex: 5,
-                                            },
-                                        ],
-                                    },
-                                    {
-                                        type: 'box',
-                                        layout: 'baseline',
-                                        spacing: 'sm',
-                                        contents: [
-                                            {
-                                                type: 'text',
-                                                text: 'Time',
-                                                color: '#aaaaaa',
-                                                size: 'sm',
-                                                flex: 1,
-                                            },
-                                            {
-                                                type: 'text',
-                                                text: time,
-                                                wrap: true,
-                                                color: '#666666',
-                                                size: 'sm',
-                                                flex: 5,
-                                            },
-                                        ],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                    footer: {
-                        type: 'box',
-                        layout: 'vertical',
-                        contents: [
-                            {
-                                type: 'button',
-                                action: {
-                                    type: 'uri',
-                                    label: 'Details',
-                                    uri: url,
-                                },
-                            },
-                        ],
-                    },
+        coworkingSpace,
+        reservation,
+        'Reminder',
+        `${days === 0 ? 'Today is the reservation date!' : `Reservation in ${days} day${days === 1 ? '' : 's'}`}`,
+        `${FRONTEND_URL}/reservations/${reservation._id}`,
+        'Details',
+    );
+};
+
+// For sending reservation status when create/update/delete reservation
+// Use in this format :
+// reservationBubble({UserLineId}, coworkingSpace data, reservation data, 'created')
+const reservationBubble = (to, coworkingSpace, reservation, action) => {
+    return notiBubble(
+        to,
+        coworkingSpace,
+        reservation,
+        'New update of reservation',
+        `Your reservation has been ${action}!`,
+        `${FRONTEND_URL}/reservations/${reservation._id}`,
+        'Details',
+    );
+};
+
+// For sending invitation to be co-booker
+// Use in this format :
+// inviteBubble({UserLineId}, coworkingSpace data, reservation data, 'Owner Name', 'http...', 'http...')
+const inviteBubble = async (
+    to,
+    coworkingSpace,
+    reservation,
+    owner,
+    acceptLink,
+    declineLink,
+) => {
+    return notiBubble(
+        to,
+        coworkingSpace,
+        reservation,
+        'New invitation',
+        `${owner} has invited you to be co-booker!`,
+        acceptLink,
+        'Accept',
+        declineLink,
+    );
+};
+
+// For send reminder to user in general.
+// Use in this format :
+// notiBubble({UserLineId}, coworkingSpace data, reservation data, 'Reminder', 'Reservation in 3 days')
+const notiBubble = async (
+    to,
+    coworkingSpace,
+    reservation,
+    headerTxt,
+    descriptionTxt,
+    detailLink = `${FRONTEND_URL}/coworking-spaces`,
+
+    buttonTxt = 'Details',
+    declineLink,
+) => {
+    try {
+        const footerButtons = [
+            detailLink && {
+                type: 'button',
+                action: {
+                    type: 'uri',
+                    label: buttonTxt,
+                    uri: detailLink,
                 },
             },
-        ],
-    });
+            declineLink && {
+                type: 'button',
+                action: {
+                    type: 'uri',
+                    label: 'Decline',
+                    uri: declineLink,
+                },
+            },
+        ].filter(Boolean);
+
+        return await // TEMP, MUST BE REPLACED WITH BELOW 2 LINES (For eco purpose)
+        // getClient().replyMessage({
+        // replyToken,
+        getClient().pushMessage({
+            to,
+            messages: [
+                {
+                    type: 'flex',
+                    altText: `${headerTxt} ${descriptionTxt}`,
+                    contents: {
+                        type: 'bubble',
+                        body: {
+                            type: 'box',
+                            layout: 'vertical',
+                            contents: [
+                                {
+                                    type: 'text',
+                                    text: headerTxt,
+                                    decoration: 'none',
+                                    color: '#a15c86',
+                                },
+                                {
+                                    type: 'text',
+                                    text: coworkingSpace.name,
+                                    weight: 'bold',
+                                    size: 'xxl',
+                                    margin: 'sm',
+                                },
+                                {
+                                    type: 'text',
+                                    text: descriptionTxt,
+                                    weight: 'regular',
+                                    size: 'xl',
+                                    margin: 'none',
+                                    wrap: true,
+                                },
+                                {
+                                    type: 'box',
+                                    layout: 'vertical',
+                                    margin: 'lg',
+                                    spacing: 'sm',
+                                    contents: [
+                                        {
+                                            type: 'box',
+                                            layout: 'baseline',
+                                            spacing: 'sm',
+                                            contents: [
+                                                {
+                                                    type: 'text',
+                                                    text: 'Date',
+                                                    color: '#aaaaaa',
+                                                    size: 'sm',
+                                                    flex: 3,
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    text: reservation.reserveDate,
+                                                    wrap: true,
+                                                    color: '#666666',
+                                                    size: 'sm',
+                                                    flex: 5,
+                                                },
+                                            ],
+                                        },
+                                        {
+                                            type: 'box',
+                                            layout: 'baseline',
+                                            spacing: 'sm',
+                                            contents: [
+                                                {
+                                                    type: 'text',
+                                                    text: 'Open time',
+                                                    color: '#aaaaaa',
+                                                    size: 'sm',
+                                                    flex: 3,
+                                                    wrap: true,
+                                                },
+                                                {
+                                                    type: 'text',
+                                                    text: `${coworkingSpace.openTime} - ${coworkingSpace.closeTime}`,
+                                                    wrap: true,
+                                                    color: '#666666',
+                                                    size: 'sm',
+                                                    flex: 5,
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                },
+                            ],
+                        },
+                        footer: {
+                            type: 'box',
+                            layout: 'vertical',
+                            contents: footerButtons,
+                        },
+                    },
+                },
+            ],
+        });
+    } catch (error) {
+        console.error(
+            'LINE Push Message Error:',
+            error.response ? error.response.data : error.message,
+        );
+        throw error;
+    }
 };
-module.exports.ADD_LINE_LINK = ADD_LINE_LINK;
+
+module.exports = {
+    getRecipientLineIds,
+    pushText,
+    replyText,
+    reminderBubble,
+    inviteBubble,
+    reservationBubble,
+    notiBubble,
+    ADD_LINE_LINK,
+};
