@@ -1,0 +1,118 @@
+@startuml Manage Co-working Spaces Sequence
+autonumber
+
+actor "Admin" as admin
+participant "CoworkingSpaceController" as controller
+participant "CoworkingSpace" as spaceSchema
+participant "Reservation" as reservationSchema
+participant "Invitation" as invitationSchema
+participant "ErrorHandler" as errHandler
+
+alt Create Co-working Space
+    admin -> controller : POST /api/v1/coworking-spaces\n(JWT Token, spaceData)
+    activate controller
+
+    controller -> spaceSchema : create(req.body)
+    activate spaceSchema
+
+    alt ValidationError or Duplicate Key (code 11000)
+        spaceSchema --> controller : throw error
+        deactivate spaceSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400\n(ValidationError or DUPLICATE_KEY)
+        errHandler --> admin : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else valid
+        spaceSchema --> controller : coworkingSpace
+        deactivate spaceSchema
+        controller --> admin : 201 Created\n({ success: true, data: coworkingSpace })
+    end
+
+    deactivate controller
+
+else Update Co-working Space
+    admin -> controller : PUT /api/v1/coworking-spaces/:id\n(JWT Token, updateData)
+    activate controller
+
+    controller -> spaceSchema : findByIdAndUpdate(id, req.body, { new: true, runValidators: true })
+    activate spaceSchema
+
+    alt CastError, ValidationError, or Duplicate Key
+        spaceSchema --> controller : throw error
+        deactivate spaceSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400\n(WRONG_OBJECT_ID_FORMAT, ValidationError, or DUPLICATE_KEY)
+        errHandler --> admin : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else query executed
+        spaceSchema --> controller : coworkingSpace
+        deactivate spaceSchema
+
+        alt !coworkingSpace
+            controller -> errHandler : next(new ErrorResponse(MSG.COWORKING_SPACE_NOT_FOUND, 404))
+            activate errHandler
+            errHandler --> admin : 404 Not Found\n({ success: false, message })
+            deactivate errHandler
+        else coworkingSpace exists
+            controller --> admin : 200 OK\n({ success: true, data: coworkingSpace })
+        end
+    end
+
+    deactivate controller
+
+else Delete Co-working Space
+    admin -> controller : DELETE /api/v1/coworking-spaces/:id\n(JWT Token)
+    activate controller
+
+    controller -> spaceSchema : findById(req.params.id)
+    activate spaceSchema
+
+    alt CastError (Invalid ObjectId)
+        spaceSchema --> controller : throw CastError
+        deactivate spaceSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400\n(MSG.WRONG_OBJECT_ID_FORMAT)
+        errHandler --> admin : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else valid ID format
+        spaceSchema --> controller : coworkingSpace
+        deactivate spaceSchema
+
+        alt !coworkingSpace
+            controller -> errHandler : next(new ErrorResponse(MSG.COWORKING_SPACE_NOT_FOUND, 404))
+            activate errHandler
+            errHandler --> admin : 404 Not Found\n({ success: false, message })
+            deactivate errHandler
+        else coworkingSpace exists
+            controller -> reservationSchema : distinct('_id', { coworkingSpace: id })
+            activate reservationSchema
+            reservationSchema --> controller : reservationIds
+            deactivate reservationSchema
+
+            opt reservationIds.length > 0
+                controller -> invitationSchema : deleteMany({ reservation: { $in: reservationIds } })
+                activate invitationSchema
+                invitationSchema --> controller : deletedInvitations
+                deactivate invitationSchema
+            end
+
+            controller -> reservationSchema : deleteMany({ coworkingSpace: id })
+            activate reservationSchema
+            reservationSchema --> controller : deletedReservations
+            deactivate reservationSchema
+
+            controller -> spaceSchema : deleteOne({ _id: id })
+            activate spaceSchema
+            spaceSchema --> controller : deletedCoworkingSpace
+            deactivate spaceSchema
+
+            controller --> admin : 200 OK\n({ success: true, data: {} })
+        end
+    end
+
+    deactivate controller
+end
+@enduml

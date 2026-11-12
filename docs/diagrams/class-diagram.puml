@@ -1,0 +1,43 @@
+@startuml Co-working Space Class Diagram
+
+class User {
+    +ObjectId _id
+    +String name
+    +String telephoneNumber
+    +String email
+    +String role
+    -String password
+    +String lineUserId
+    +Date createdAt
+    +Date updatedAt
+    +getSignedJwtToken() : String
+    +matchPassword(enteredPassword : String) : Boolean
+}
+
+class CoworkingSpace {
+    +ObjectId _id
+    +String name
+    +String address
+    +String telephoneNumber
+    +String openTime
+    +String closeTime
+    +Number maximumCapacity
+    +Date createdAt
+    +Date updatedAt
+}
+
+class Reservation {
+    +ObjectId _id
+    +String reserveDate
+    +ObjectId coworkingSpace
+    +ObjectId user
+    +ObjectId[] cobooker
+    +Date createdAt
+    +Date updatedAt
+}
+
+User "1" -- "0..*" Reservation : owns >
+User "0..*" -- "0..*" Reservation : co-books >
+CoworkingSpace "1" -- "0..*" Reservation : booked in >
+
+@enduml

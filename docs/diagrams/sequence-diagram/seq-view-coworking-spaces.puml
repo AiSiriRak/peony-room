@@ -1,0 +1,76 @@
+@startuml View and Search Co-working Spaces Sequence
+autonumber
+
+actor "User" as user
+participant "CoworkingSpaceController" as controller
+participant "CoworkingSpace" as spaceSchema
+participant "Reservation" as reservationSchema
+participant "ErrorHandler" as errHandler
+
+alt Search / Get All Co-working Spaces
+    user -> controller : GET /api/v1/coworking-spaces\n(filter, select, sort, page, limit)
+    activate controller
+
+    note right of controller : Parse query operators ($gt, $gte, $lt, $lte)\n& pagination parameters
+
+    controller -> spaceSchema : countDocuments(query)
+    activate spaceSchema
+    spaceSchema --> controller : total
+    deactivate spaceSchema
+
+    controller -> spaceSchema : find(query).select().sort().skip().limit()
+    activate spaceSchema
+
+    alt Query / Database Error
+        spaceSchema --> controller : throw error
+        deactivate spaceSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400 or 500\n(CastError or SERVER_ERROR)
+        errHandler --> user : 400 / 500 Error\n({ success: false, message })
+        deactivate errHandler
+    else valid
+        spaceSchema --> controller : coworkingspaces
+        deactivate spaceSchema
+        controller --> user : 200 OK\n({ success: true, count, pagination, data: coworkingspaces })
+    end
+
+    deactivate controller
+
+else View Single Co-working Space by ID
+    user -> controller : GET /api/v1/coworking-spaces/:id
+    activate controller
+
+    controller -> spaceSchema : findById(req.params.id)
+    activate spaceSchema
+
+    alt CastError (Invalid ObjectId)
+        spaceSchema --> controller : throw CastError
+        deactivate spaceSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400\n(MSG.WRONG_OBJECT_ID_FORMAT)
+        errHandler --> user : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else valid ID format
+        spaceSchema --> controller : coworkingSpace
+        deactivate spaceSchema
+
+        alt !coworkingSpace
+            controller -> errHandler : next(new ErrorResponse(MSG.COWORKING_SPACE_NOT_FOUND, 404))
+            activate errHandler
+            errHandler --> user : 404 Not Found\n({ success: false, message })
+        ctivate errHandler
+    else coworkingSpace exists
+        controller -> reservationSchema : find({ coworkingSpace: id }).sort().populate('user')
+        activate reservationSchema
+        reservationSchema --> controller : reservations
+        deactivate reservationSchema
+
+        controller --> user : 200 OK\n({ success: true, data: { ...coworkingSpace, reservations } })
+        end
+    end
+
+    deactivate controller
+end
+@enduml

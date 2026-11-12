@@ -9,6 +9,7 @@ This monorepo contains both the **Backend** (Node.js/Express/MongoDB) and **Fron
 ```
 ├── .github/workflows/   # CI/CD workflows
 ├── backend/             # Node.js REST API service
+├── docs/                # System architecture & UML diagrams
 └── frontend/            # Node.js Frontend application
 ```
 
@@ -16,5 +17,6 @@ This monorepo contains both the **Backend** (Node.js/Express/MongoDB) and **Fron
 
 Refer to the individual README files for setup and running instructions:
 
-- 🛠️ [Backend README](./backend/README.md)
-- 🎨 [Frontend README](./frontend/README.md)
+- [Backend README](./backend/README.md)
+- [Frontend README](./frontend/README.md)
+- [System Architecture & UML Diagrams](./docs/README.md)

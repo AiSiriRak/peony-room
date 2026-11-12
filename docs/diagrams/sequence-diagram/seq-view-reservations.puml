@@ -1,0 +1,85 @@
+@startuml View Reservations Sequence
+autonumber
+
+actor "User" as user
+participant "ReservationController" as controller
+participant "Reservation" as reservationSchema
+participant "Invitation" as invitationSchema
+participant "ErrorHandler" as errHandler
+
+alt Get All / Filtered Reservations
+    user -> controller : GET /api/v1/reservations\n(or /coworking-spaces/:coworkingSpaceId/reservations)
+    activate controller
+
+    note right of controller : Build filter:\n- coworkingSpaceId (if nested route)\n- user or cobooker = req.user.id (if role != admin)
+
+    controller -> reservationSchema : find(filter).sort().populate('coworkingSpace user cobooker')
+    activate reservationSchema
+
+    alt CastError or Database Error
+        reservationSchema --> controller : throw error
+        deactivate reservationSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400 or 500\n(CastError or SERVER_ERROR)
+        errHandler --> user : 400 / 500 Error\n({ success: false, message })
+        deactivate errHandler
+    else valid
+        reservationSchema --> controller : reservations
+        deactivate reservationSchema
+        controller --> user : 200 OK\n({ success: true, count, data: reservations })
+    end
+
+    deactivate controller
+
+else Get Single Reservation by ID
+    user -> controller : GET /api/v1/reservations/:id
+    activate controller
+
+    controller -> reservationSchema : findById(req.params.id)
+    activate reservationSchema
+
+    alt CastError (Invalid ObjectId)
+        reservationSchema --> controller : throw CastError
+        deactivate reservationSchema
+        controller -> errHandler : next(error)
+        activate errHandler
+        note right of errHandler : Sets statusCode = 400\n(MSG.WRONG_OBJECT_ID_FORMAT)
+        errHandler --> user : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else valid ID format
+        reservationSchema --> controller : reservation
+        deactivate reservationSchema
+
+        alt !reservation
+            controller -> errHandler : next(new ErrorResponse(MSG.RESERVATION_NOT_FOUND, 404))
+            activate errHandler
+            errHandler --> user : 404 Not Found\n({ success: false, message })
+            deactivate errHandler
+        else reservation exists
+            alt !isOwner && !isCobooker && !isAdmin
+                controller -> errHandler : next(new ErrorResponse(MSG.NOT_RESOURCE_OWNER, 403))
+                activate errHandler
+                errHandler --> user : 403 Forbidden\n({ success: false, message })
+                deactivate errHandler
+            else authorized (owner, co-booker, or admin)
+                controller -> reservationSchema : populate('coworkingSpace user cobooker')
+                activate reservationSchema
+                reservationSchema --> controller : populatedReservation
+                deactivate reservationSchema
+
+                note right of controller : Build invitationFilter:\n- reservation = id\n- recipient = req.user.id (if !isOwner && !isAdmin)
+
+                controller -> invitationSchema : find(invitationFilter).sort().populate('inviter recipient')
+                activate invitationSchema
+                invitationSchema --> controller : invitations
+                deactivate invitationSchema
+
+                controller --> user : 200 OK\n({ success: true, data: { ...reservation, invitations } })
+            end
+        end
+    end
+
+    deactivate controller
+end
+@enduml

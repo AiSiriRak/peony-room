@@ -1,0 +1,56 @@
+@startuml Cancel Reservation Sequence
+autonumber
+
+actor "User" as user
+participant "ReservationController" as controller
+participant "Reservation" as reservationSchema
+participant "Invitation" as invitationSchema
+participant "ErrorHandler" as errHandler
+
+user -> controller : DELETE /api/v1/reservations/:id\n(JWT Token)
+activate controller
+
+controller -> reservationSchema : findById(req.params.id)
+activate reservationSchema
+
+alt CastError (Invalid ObjectId)
+    reservationSchema --> controller : throw CastError
+    deactivate reservationSchema
+    controller -> errHandler : next(error)
+    activate errHandler
+    note right of errHandler : Sets statusCode = 400\n(MSG.WRONG_OBJECT_ID_FORMAT)
+    errHandler --> user : 400 Bad Request\n({ success: false, message })
+    deactivate errHandler
+else valid ID format
+    reservationSchema --> controller : reservation
+    deactivate reservationSchema
+
+    alt !reservation
+        controller -> errHandler : next(new ErrorResponse(MSG.RESERVATION_NOT_FOUND, 404))
+        activate errHandler
+        errHandler --> user : 404 Not Found\n({ success: false, message })
+        deactivate errHandler
+    else reservation exists
+        alt reservation.user != req.user.id && req.user.role != "admin"
+            controller -> errHandler : next(new ErrorResponse(MSG.NOT_RESOURCE_OWNER, 403))
+            activate errHandler
+            errHandler --> user : 403 Forbidden\n({ success: false, message })
+            deactivate errHandler
+        else authorized (owner or admin)
+            controller -> invitationSchema : deleteMany({ reservation: req.params.id })
+            activate invitationSchema
+            invitationSchema --> controller : deletedInvitations
+            deactivate invitationSchema
+
+            controller -> reservationSchema : deleteOne()
+            activate reservationSchema
+            reservationSchema --> controller : deletedReservation
+            deactivate reservationSchema
+
+            controller --> user : 200 OK\n({ success: true, data: {} })
+        end
+    end
+end
+
+deactivate controller
+@enduml
