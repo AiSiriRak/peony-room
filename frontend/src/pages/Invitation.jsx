@@ -1,34 +1,25 @@
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Button } from "../components/Button";
 import { respondInvitation } from "../features/invitations";
-import { useEffect, useState } from "react";
 
 function Invitation() {
   const navigate = useNavigate();
   const { invitationId } = useParams();
-  const [searchParams] = useSearchParams();
-  const statusFromUrl = searchParams.get("status");
 
-  const storageKey = `invitation_responded_${invitationId}`;
-  const [currentStatus, setCurrentStatus] = useState(
-    () => sessionStorage.getItem(storageKey) || statusFromUrl,
-  );
+  const [currentStatus, setCurrentStatus] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleDecision = async (decisionStatus) => {
-    if (isSubmitting || sessionStorage.getItem(storageKey)) return;
-
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      sessionStorage.setItem(storageKey, decisionStatus);
-
       const data = await respondInvitation(invitationId, decisionStatus);
-      console.log(data);
+
+      if (!data) return;
 
       setCurrentStatus(decisionStatus);
     } catch (error) {
-      sessionStorage.removeItem(storageKey);
       console.error(
         "Error respond invitation:",
         error.response?.data || error.message,
@@ -37,12 +28,6 @@ function Invitation() {
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    if (statusFromUrl && !sessionStorage.getItem(storageKey)) {
-      handleDecision(statusFromUrl);
-    }
-  }, [statusFromUrl, invitationId]);
 
   return (
     <div className="w-screen h-dvh flex justify-center items-center">

@@ -1,29 +1,33 @@
-import axios from 'axios'
+import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/invitations`;
+const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/invitations`;
 
 export const getInvitations = async () => {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(API_URL, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        }
-    })
+  const token = localStorage.getItem("token");
+  const headers = {};
+  if (token && token !== "null" && token !== "undefined") {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-    return response.data
-}
+  const response = await axios.get(BACKEND_URL, { headers });
 
-export const respondInvitation = async (id, status) => {
-    const token = localStorage.getItem("token");
-    const response = await axios.put(
-        `${API_URL}/${id}`,
-        { status: status },
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        }
-    );
+  return response.data;
+};
 
-    return response.data
-}
+export const respondInvitation = async (invitationId, status) => {
+  const token = localStorage.getItem("token");
+  const headers = {};
+  if (token && token !== "null" && token !== "undefined") {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await axios.put(
+    `${BACKEND_URL}/${invitationId}`,
+    { status },
+    {
+      headers,
+    },
+  );
+
+  return response.data;
+};
