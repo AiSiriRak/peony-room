@@ -171,20 +171,8 @@ exports.createInvitation = async (req, res, next) => {
         });
 
         // LINE Message for user login with LINE
-        // if (recipient?.lineUserId) {
-        //     const coworkingSpace = await CoworkingSpace.findById(
-        //         reservation.coworkingSpace,
-        //     );
-        //     inviteBubble(
-        //         recipient.lineUserId,
-        //         coworkingSpace,
-        //         reservation,
-        //         req.user.name,
-        //         invitation
-        //     ).catch((err) =>
-        //         console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
-        //     );
-
+        // if (recipient.lineUserId) {
+        //     await inviteBubble(recipient.lineUserId, invitation);
         // }
 
         res.status(201).json({
@@ -304,7 +292,21 @@ exports.respondInvitation = async (req, res, next) => {
         invitation.status = status;
         await invitation.save();
 
-        // TODO: Trigger LINE notification to host regarding accept/decline action
+        // Line notification for inviter
+        const inviter = await User.findById(invitation.inviter);
+
+        if (inviter.lineUserId) {
+            const reservation = await Reservation.findById(
+                invitation.reservation,
+            );
+            const coworkingSpace = await CoworkingSpace.findById(
+                reservation.coworkingSpace,
+            );
+            // await pushText(
+            //     inviter.lineUserId,
+            //     `${req.user.name} has accepted your invitation at ${coworkingSpace.name}!`,
+            // );
+        }
 
         res.status(200).json({
             success: true,
