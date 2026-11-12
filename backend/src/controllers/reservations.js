@@ -25,10 +25,22 @@ exports.getReservations = async (req, res, next) => {
         }
 
         // Executing query with filter
-        const reservations = await Reservation.find(filter).populate({
-            path: 'coworkingSpace',
-            select: 'name address telephoneNumber openTime closeTime maximumCapacity',
-        });
+        const reservations = await Reservation.find(filter)
+            .sort({ reserveDate: -1 })
+            .populate([
+                {
+                    path: 'coworkingSpace',
+                    select: 'name address telephoneNumber openTime closeTime maximumCapacity',
+                },
+                {
+                    path: 'user',
+                    select: 'name email',
+                },
+                {
+                    path: 'cobooker',
+                    select: 'name email',
+                },
+            ]);
 
         res.status(200).json({
             success: true,
@@ -46,10 +58,7 @@ exports.getReservations = async (req, res, next) => {
 exports.getReservation = async (req, res, next) => {
     try {
         // Find Reservation by ID
-        const reservation = await Reservation.findById(req.params.id).populate({
-            path: 'coworkingSpace',
-            select: 'name address telephoneNumber openTime closeTime maximumCapacity',
-        });
+        const reservation = await Reservation.findById(req.params.id);
 
         // Reservation with the ID not found
         if (!reservation) {
@@ -72,6 +81,22 @@ exports.getReservation = async (req, res, next) => {
             return next(new ErrorResponse(MSG.NOT_RESOURCE_OWNER, 403));
         }
 
+        // Query co-working space and user/cobooker name
+        await reservation.populate([
+            {
+                path: 'coworkingSpace',
+                select: 'name address telephoneNumber openTime closeTime maximumCapacity',
+            },
+            {
+                path: 'user',
+                select: 'name email',
+            },
+            {
+                path: 'cobooker',
+                select: 'name email',
+            },
+        ]);
+
         // Fetch associated invitations
         const invitationFilter = { reservation: req.params.id };
 
@@ -81,6 +106,7 @@ exports.getReservation = async (req, res, next) => {
         }
 
         const invitations = await Invitation.find(invitationFilter)
+            .sort({ updatedAt: -1 })
             .populate('inviter', 'name email')
             .populate('recipient', 'name email');
 

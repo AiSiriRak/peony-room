@@ -25,7 +25,6 @@ connectDB();
 const app = express();
 app.set('query parser', 'extended');
 
-
 // API Version Prefix
 const API_VER = '/api/v1';
 
@@ -43,10 +42,12 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Frontend
-app.use(cors({
-    origin: process.env.FRONTEND_URL, // URL ของ Frontend
-    credentials: true
-}));
+app.use(
+    cors({
+        origin: process.env.FRONTEND_URL, // URL ของ Frontend
+        credentials: true,
+    }),
+);
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });

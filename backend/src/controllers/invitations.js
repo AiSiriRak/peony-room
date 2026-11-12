@@ -44,6 +44,7 @@ exports.getInvitations = async (req, res, next) => {
 
         // Build query with populate
         query = Invitation.find(filter)
+            .sort({ updatedAt: -1 })
             .populate('inviter', 'name email')
             .populate('recipient', 'name email')
             .populate({
