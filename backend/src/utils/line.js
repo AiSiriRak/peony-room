@@ -87,14 +87,13 @@ const reservationBubble = (to, coworkingSpace, reservation, action) => {
 
 // For sending invitation to be co-booker
 // Use in this format :
-// inviteBubble({UserLineId}, coworkingSpace data, reservation data, 'Owner Name', 'http...', 'http...')
+// inviteBubble({UserLineId}, coworkingSpace data, reservation data, invitation data, 'Owner Name')
 const inviteBubble = async (
     to,
     coworkingSpace,
     reservation,
     owner,
-    acceptLink,
-    declineLink,
+    invitation,
 ) => {
     return notiBubble(
         to,
@@ -102,9 +101,9 @@ const inviteBubble = async (
         reservation,
         'New invitation',
         `${owner} has invited you to be co-booker!`,
-        acceptLink,
+        `${FRONTEND_URL}/invitations/${invitation._id}?status=accepted`,
         'Accept',
-        declineLink,
+        `${FRONTEND_URL}/invitations/${invitation._id}?status=declined`,
     );
 };
 

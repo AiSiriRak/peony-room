@@ -107,7 +107,9 @@ exports.getCoworkingSpace = async (req, res, next) => {
         // Find all reservations associated with this co-working space
         const reservations = await Reservation.find({
             coworkingSpace: req.params.id,
-        }).populate('user', 'name email');
+        })
+            .sort({ reserveDate: -1 })
+            .populate('user', 'name email');
 
         // Found Co-working Space
         res.status(200).json({
