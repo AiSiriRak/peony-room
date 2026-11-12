@@ -87,14 +87,13 @@ const reservationBubble = (to, coworkingSpace, reservation, action) => {
 
 // For sending invitation to be co-booker
 // Use in this format :
-// inviteBubble({UserLineId}, coworkingSpace data, reservation data, 'Owner Name', 'http...', 'http...')
+// inviteBubble({UserLineId}, coworkingSpace data, reservation data, invitation data, 'Owner Name')
 const inviteBubble = async (
     to,
     coworkingSpace,
     reservation,
     owner,
-    acceptLink,
-    declineLink,
+    invitation
 ) => {
     return notiBubble(
         to,
@@ -102,9 +101,9 @@ const inviteBubble = async (
         reservation,
         'New invitation',
         `${owner} has invited you to be co-booker!`,
-        acceptLink,
+        `${FRONTEND_URL}/invitations/${invitation._id}?status=accepted`,
         'Accept',
-        declineLink,
+        `${FRONTEND_URL}/invitations/${invitation._id}?status=declined`,
     );
 };
 
@@ -143,105 +142,105 @@ const notiBubble = async (
         ].filter(Boolean);
 
         return await // TEMP, MUST BE REPLACED WITH BELOW 2 LINES (For eco purpose)
-        // getClient().replyMessage({
-        // replyToken,
-        getClient().pushMessage({
-            to,
-            messages: [
-                {
-                    type: 'flex',
-                    altText: `${headerTxt} ${descriptionTxt}`,
-                    contents: {
-                        type: 'bubble',
-                        body: {
-                            type: 'box',
-                            layout: 'vertical',
-                            contents: [
-                                {
-                                    type: 'text',
-                                    text: headerTxt,
-                                    decoration: 'none',
-                                    color: '#a15c86',
-                                },
-                                {
-                                    type: 'text',
-                                    text: coworkingSpace.name,
-                                    weight: 'bold',
-                                    size: 'xxl',
-                                    margin: 'sm',
-                                },
-                                {
-                                    type: 'text',
-                                    text: descriptionTxt,
-                                    weight: 'regular',
-                                    size: 'xl',
-                                    margin: 'none',
-                                    wrap: true,
-                                },
-                                {
-                                    type: 'box',
-                                    layout: 'vertical',
-                                    margin: 'lg',
-                                    spacing: 'sm',
-                                    contents: [
-                                        {
-                                            type: 'box',
-                                            layout: 'baseline',
-                                            spacing: 'sm',
-                                            contents: [
-                                                {
-                                                    type: 'text',
-                                                    text: 'Date',
-                                                    color: '#aaaaaa',
-                                                    size: 'sm',
-                                                    flex: 3,
-                                                },
-                                                {
-                                                    type: 'text',
-                                                    text: reservation.reserveDate,
-                                                    wrap: true,
-                                                    color: '#666666',
-                                                    size: 'sm',
-                                                    flex: 5,
-                                                },
-                                            ],
-                                        },
-                                        {
-                                            type: 'box',
-                                            layout: 'baseline',
-                                            spacing: 'sm',
-                                            contents: [
-                                                {
-                                                    type: 'text',
-                                                    text: 'Open time',
-                                                    color: '#aaaaaa',
-                                                    size: 'sm',
-                                                    flex: 3,
-                                                    wrap: true,
-                                                },
-                                                {
-                                                    type: 'text',
-                                                    text: `${coworkingSpace.openTime} - ${coworkingSpace.closeTime}`,
-                                                    wrap: true,
-                                                    color: '#666666',
-                                                    size: 'sm',
-                                                    flex: 5,
-                                                },
-                                            ],
-                                        },
-                                    ],
-                                },
-                            ],
-                        },
-                        footer: {
-                            type: 'box',
-                            layout: 'vertical',
-                            contents: footerButtons,
+            // getClient().replyMessage({
+            // replyToken,
+            getClient().pushMessage({
+                to,
+                messages: [
+                    {
+                        type: 'flex',
+                        altText: `${headerTxt} ${descriptionTxt}`,
+                        contents: {
+                            type: 'bubble',
+                            body: {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: [
+                                    {
+                                        type: 'text',
+                                        text: headerTxt,
+                                        decoration: 'none',
+                                        color: '#a15c86',
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: coworkingSpace.name,
+                                        weight: 'bold',
+                                        size: 'xxl',
+                                        margin: 'sm',
+                                    },
+                                    {
+                                        type: 'text',
+                                        text: descriptionTxt,
+                                        weight: 'regular',
+                                        size: 'xl',
+                                        margin: 'none',
+                                        wrap: true,
+                                    },
+                                    {
+                                        type: 'box',
+                                        layout: 'vertical',
+                                        margin: 'lg',
+                                        spacing: 'sm',
+                                        contents: [
+                                            {
+                                                type: 'box',
+                                                layout: 'baseline',
+                                                spacing: 'sm',
+                                                contents: [
+                                                    {
+                                                        type: 'text',
+                                                        text: 'Date',
+                                                        color: '#aaaaaa',
+                                                        size: 'sm',
+                                                        flex: 3,
+                                                    },
+                                                    {
+                                                        type: 'text',
+                                                        text: reservation.reserveDate,
+                                                        wrap: true,
+                                                        color: '#666666',
+                                                        size: 'sm',
+                                                        flex: 5,
+                                                    },
+                                                ],
+                                            },
+                                            {
+                                                type: 'box',
+                                                layout: 'baseline',
+                                                spacing: 'sm',
+                                                contents: [
+                                                    {
+                                                        type: 'text',
+                                                        text: 'Open time',
+                                                        color: '#aaaaaa',
+                                                        size: 'sm',
+                                                        flex: 3,
+                                                        wrap: true,
+                                                    },
+                                                    {
+                                                        type: 'text',
+                                                        text: `${coworkingSpace.openTime} - ${coworkingSpace.closeTime}`,
+                                                        wrap: true,
+                                                        color: '#666666',
+                                                        size: 'sm',
+                                                        flex: 5,
+                                                    },
+                                                ],
+                                            },
+                                        ],
+                                    },
+                                ],
+                            },
+                            footer: {
+                                type: 'box',
+                                layout: 'vertical',
+                                contents: footerButtons,
+                            },
                         },
                     },
-                },
-            ],
-        });
+                ],
+            });
     } catch (error) {
         console.error(
             'LINE Push Message Error:',

@@ -3,6 +3,7 @@ const CoworkingSpace = require('../models/CoworkingSpace');
 const Reservation = require('../models/Reservation');
 const Invitation = require('../models/Invitation');
 const { ErrorResponse, MSG } = require('../utils/error');
+const { inviteBubble } = require('../utils/line');
 
 // @desc    Get all invitations
 // @route   GET /api/v1/invitations
@@ -168,7 +169,22 @@ exports.createInvitation = async (req, res, next) => {
             status: 'pending',
         });
 
-        // TODO: Add line trigger message for create here
+        // LINE Message for user login with LINE
+        // if (recipient?.lineUserId) {
+        //     const coworkingSpace = await CoworkingSpace.findById(
+        //         reservation.coworkingSpace,
+        //     );
+        //     inviteBubble(
+        //         recipient.lineUserId,
+        //         coworkingSpace,
+        //         reservation,
+        //         req.user.name,
+        //         invitation
+        //     ).catch((err) =>
+        //         console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
+        //     );
+
+        // }
 
         res.status(201).json({
             success: true,
