@@ -60,7 +60,7 @@ else View Single Co-working Space by ID
             controller -> errHandler : next(new ErrorResponse(MSG.COWORKING_SPACE_NOT_FOUND, 404))
             activate errHandler
             errHandler --> user : 404 Not Found\n({ success: false, message })
-        ctivate errHandler
+            activate errHandler
     else coworkingSpace exists
         controller -> reservationSchema : find({ coworkingSpace: id }).sort().populate('user')
         activate reservationSchema
