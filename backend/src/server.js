@@ -3,6 +3,7 @@ const dotenv = require('dotenv');
 const cookieParser = require('cookie-parser');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/error');
+const cors = require('cors');
 
 const line = require('@line/bot-sdk');
 const { handleWebhook } = require('./controllers/line');
@@ -24,6 +25,7 @@ connectDB();
 const app = express();
 app.set('query parser', 'extended');
 
+
 // API Version Prefix
 const API_VER = '/api/v1';
 
@@ -39,6 +41,12 @@ app.use(express.json());
 
 // Cookie parser
 app.use(cookieParser());
+
+// Frontend
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // URL ของ Frontend
+    credentials: true
+}));
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok' });
