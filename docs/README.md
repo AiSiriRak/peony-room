@@ -25,29 +25,37 @@ Execution workflows between the Client, Controller, Database Schema, and Central
 ### 3.1 Authentication
 
 * **Register**
+
   ![Register Sequence](./images/seq-register.png)
 
 * **Login**
+
   ![Login Sequence](./images/seq-login.png)
 
 ### 3.2 Co-working Spaces
 
 * **View / Search Co-working Spaces**
+
   ![View and Search Co-working Spaces Sequence](./images/seq-view-coworking-spaces.png)
 
 * **Manage Co-working Spaces (Admin)**
+
   ![Manage Co-working Spaces Sequence](./images/seq-manage-coworking-spaces.png)
 
 ### 3.3 Reservations
 
 * **Create Reservation**
+
   ![Create Reservation Sequence](./images/seq-create-reservation.png)
 
 * **View Reservations**
+
   ![View Reservations Sequence](./images/seq-view-reservations.png)
 
 * **Update Reservation**
+
   ![Update Reservation Sequence](./images/seq-update-reservation.png)
 
 * **Cancel Reservation**
+
   ![Cancel Reservation Sequence](./images/seq-cancel-reservation.png)
