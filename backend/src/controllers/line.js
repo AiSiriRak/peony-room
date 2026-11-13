@@ -1,12 +1,10 @@
 const crypto = require('crypto');
+const mongoose = require('mongoose');
+
 const User = require('../models/User');
-const {
-    replyText,
-    reminderBubble,
-    ADD_LINE_LINK,
-    inviteBubble,
-    reservationBubble,
-} = require('../utils/line');
+const { replyText, ADD_LINE_LINK } = require('../utils/line');
+const { respondInvitation } = require('./invitations');
+const { ErrorResponse } = require('../utils/error');
 
 // @route   POST /api/v1/line/link-code
 // @access  Private
@@ -36,6 +34,9 @@ const handleEvent = async (event) => {
             { $unset: { lineUserId: '' } },
         );
     }
+
+    // For handle postback message
+    if (event.type === 'postback') return handlePostback(event);
 
     // Ignore non-text messages
     if (event.type !== 'message' || event.message.type !== 'text') return;
@@ -74,6 +75,57 @@ const handleEvent = async (event) => {
         user
             ? 'Account linked successfully.'
             : 'Invalid code or Expired code, please try again.',
+    );
+};
+
+const handlePostback = async (event) => {
+    const [kind, action, invitationId] = event.postback.data.split(':');
+    if (
+        kind !== 'invite' ||
+        !['accept', 'decline'].includes(action) ||
+        !mongoose.isValidObjectId(invitationId)
+    )
+        return;
+
+    const user = await User.findOne({ lineUserId: event.source.userId });
+    if (!user) {
+        return replyText(event.replyToken, 'Please link your account first.');
+    }
+
+    const status = action === 'accept' ? 'accepted' : 'declined';
+
+    const req = {
+        user,
+        params: { id: invitationId },
+        body: { status },
+    };
+
+    const res = {
+        status() {
+            return this;
+        },
+        json() {
+            return this;
+        },
+    };
+
+    let error = null;
+    const next = (err) => {
+        error = err;
+    };
+
+    await respondInvitation(req, res, next);
+
+    if (error) {
+        if (error instanceof ErrorResponse) {
+            return replyText(event.replyToken, error.message);
+        }
+        throw error;
+    }
+
+    return replyText(
+        event.replyToken,
+        status === 'accepted' ? 'Invitation accepted.' : 'Invitation declined.',
     );
 };
 

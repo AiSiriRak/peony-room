@@ -2,7 +2,7 @@ const line = require('@line/bot-sdk');
 const User = require('../models/User');
 
 const ADD_LINE_LINK = 'https://lin.ee/Qp3cqaj';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5000';
+const FRONTEND_URL = process.env.FRONTEND_TUNNEL_URL;
 
 let client;
 const getClient = () => {
@@ -55,6 +55,22 @@ const replyText = async (replyToken, text) => {
     }
 };
 
+// For Push message to user
+const pushMessages = async (to, messages) => {
+    try {
+        return await getClient().pushMessage({
+            to,
+            messages,
+        });
+    } catch (error) {
+        console.error(
+            'LINE push Message Error:',
+            error.response ? error.response.data : error.message,
+        );
+        throw error;
+    }
+};
+
 // For sending reminder before reservation date.
 // Use in this format :
 // reminderBubble({UserLineId}, coworkingSpace data, reservation data, 3)
@@ -87,24 +103,31 @@ const reservationBubble = (to, coworkingSpace, reservation, action) => {
 
 // For sending invitation to be co-booker
 // Use in this format :
-// inviteBubble({UserLineId}, coworkingSpace data, reservation data, invitation data, 'Owner Name')
-const inviteBubble = async (
-    to,
-    coworkingSpace,
-    reservation,
-    owner,
-    invitation,
-) => {
-    return notiBubble(
-        to,
-        coworkingSpace,
-        reservation,
-        'New invitation',
-        `${owner} has invited you to be co-booker!`,
-        `${FRONTEND_URL}/invitations/${invitation._id}?status=accepted`,
-        'Accept',
-        `${FRONTEND_URL}/invitations/${invitation._id}?status=declined`,
-    );
+// inviteBubble({UserLineId}, coworkingSpace data, reservation data, 'Owner Name', invitation data)
+const inviteBubble = async (to, invitation) => {
+    return pushMessages(to, [
+        {
+            type: 'template',
+            altText: 'You have a new invitation',
+            template: {
+                type: 'buttons',
+                title: 'New invitation',
+                text: 'Someone invited you. Do you want to accept?',
+                actions: [
+                    {
+                        type: 'postback',
+                        label: 'Accept',
+                        data: `invite:accept:${invitation._id}`,
+                    },
+                    {
+                        type: 'postback',
+                        label: 'Decline',
+                        data: `invite:decline:${invitation._id}`,
+                    },
+                ],
+            },
+        },
+    ]);
 };
 
 // For send reminder to user in general.
@@ -254,6 +277,7 @@ module.exports = {
     getRecipientLineIds,
     pushText,
     replyText,
+    pushMessages,
     reminderBubble,
     inviteBubble,
     reservationBubble,

@@ -1,9 +1,9 @@
-import axios from 'axios'
+import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/coworking-spaces`;
+const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/coworking-spaces`;
 
 export const getCoworkingSpaces = async () => {
-    const response = await axios.get(API_URL)
+  const response = await axios.get(BACKEND_URL);
 
-    return response.data
-}
+  return response.data;
+};
