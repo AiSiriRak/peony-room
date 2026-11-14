@@ -60,12 +60,11 @@ exports.login = async (req, res, next) => {
 // @access  Public
 exports.logout = async (req, res, next) => {
     try {
-        res.status(200)
-            .clearCookie('token', {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-            })
-            .json({ success: true, data: {} });
+        res.cookie('token', 'none', {
+            expires: new Date(Date.now() + 10 * 1000),
+            httpOnly: true,
+        });
+        res.status(200).json({ success: true, data: {} });
     } catch (error) {
         next(error);
     }

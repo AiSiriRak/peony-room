@@ -43,7 +43,7 @@ export const logout = async (email, password) => {
   const token = localStorage.getItem("token");
   try {
     if (token) {
-      await axios.post(
+      await axios.get(
         `${BACKEND_URL}/logout`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
