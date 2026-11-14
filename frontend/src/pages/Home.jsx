@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getCoworkingSpaces } from "../features/coworkingspaces";
 import { TextInput } from "../components/TextInput";
 import { getMe } from "../features/auth";
+import { getLineLink } from "../features/line";
 
 function Home() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Home() {
   const [coSpace, setCoSpace] = useState(null);
   const [coSpaceId, setCoSpaceId] = useState("");
   const [invitationId, setInvitationId] = useState("");
+  const [link, setLink] = useState("");
 
   useEffect(() => {
     async function loadUserAndData() {
@@ -34,6 +36,21 @@ function Home() {
       <div className="w-full flex flex-col justify-center items-center h-full gap-5">
         <div>User : {user?.name}</div>
         <div>Email : {user?.email}</div>
+        <Button
+          fullRound={true}
+          onClick={async () => {
+            try {
+              const res = await getLineLink();
+              setLink(res.code);
+            } catch (error) {
+              console.error("Error get LINE link:", error);
+            }
+          }}
+          hideShadow={true}
+        >
+          Get Link
+        </Button>
+        <p>{link}</p>
         <Button
           fullRound={true}
           onClick={() => navigate("/login")}

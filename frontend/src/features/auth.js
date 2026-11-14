@@ -1,28 +1,54 @@
-import axios from 'axios'
+import axios from "axios";
 
-const API_URL = `${import.meta.env.VITE_API_BASE_URL}/auth`;
+const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
+
+export const register = async (
+  name,
+  telephoneNumber,
+  email,
+  password,
+  role,
+) => {
+  const response = await axios.post(`${BACKEND_URL}/register`, {
+    name: name,
+    telephoneNumber: telephoneNumber,
+    email: email,
+    password: password,
+    role: role,
+  });
+
+  const token = response.data.token || response.data.data?.token;
+  if (token) {
+    localStorage.setItem("token", token);
+  }
+
+  return response.data;
+};
 
 export const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/login`, { email: email, password: password })
+  const response = await axios.post(`${BACKEND_URL}/login`, {
+    email: email,
+    password: password,
+  });
 
-    const token = response.data.token || response.data.data?.token;
-    if (token) {
-        localStorage.setItem("token", token);
-    }
+  const token = response.data.token || response.data.data?.token;
+  if (token) {
+    localStorage.setItem("token", token);
+  }
 
-    return response.data
-}
+  return response.data;
+};
 
 export const getMe = async () => {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(
-        `${API_URL}/me`,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            }
-        },
-    );
+  const token = localStorage.getItem("token");
+  const headers = {};
+  if (token && token !== "null" && token !== "undefined") {
+    headers.Authorization = `Bearer ${token}`;
+  }
 
-    return response.data.data;
+  const response = await axios.get(`${BACKEND_URL}/me`, {
+    headers,
+  });
+
+  return response.data.data;
 };
