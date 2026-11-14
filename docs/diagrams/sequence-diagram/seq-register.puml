@@ -1,0 +1,36 @@
+@startuml Register Sequence
+autonumber
+
+actor "User" as user
+participant "AuthController" as controller
+participant "User" as userSchema
+participant "ErrorHandler" as errHandler
+
+user -> controller : POST /api/v1/auth/register\n(name, telephoneNumber, email, password, role)
+activate controller
+
+controller -> userSchema : create({ name, telephoneNumber, email, password, role })
+
+alt ValidationError or Duplicate Email (code 11000)
+    userSchema --> controller : throw error
+    controller -> errHandler : next(error)
+    activate errHandler
+    note right of errHandler : Sets statusCode = 400\n(ValidationError or EMAIL_ALREADY_REGISTERED)
+    errHandler --> user : 400 Bad Request\n({ success: false, message })
+    deactivate errHandler
+else valid
+    note right of userSchema : pre('save') hook hashes\npassword with bcrypt
+    userSchema --> controller : user
+
+    controller -> controller : sendTokenResponse(user, 201, res)
+    activate controller
+    controller -> userSchema : getSignedJwtToken()
+    activate userSchema
+    userSchema --> controller : token
+    deactivate userSchema
+
+    controller --> user : 201 Created\n(cookie + { success: true, token })
+    deactivate controller
+end
+deactivate controller
+@enduml

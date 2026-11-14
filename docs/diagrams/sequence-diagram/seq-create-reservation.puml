@@ -1,0 +1,52 @@
+@startuml Create Reservation Sequence
+autonumber
+
+actor "User" as user
+participant "ReservationController" as controller
+participant "CoworkingSpace" as spaceSchema
+participant "Reservation" as reservationSchema
+participant "ErrorHandler" as errHandler
+
+user -> controller : POST /api/v1/coworking-spaces/:coworkingSpaceId/reservations\n(JWT Token, reserveDate, cobooker)
+activate controller
+
+controller -> spaceSchema : findById(coworkingSpaceId)
+activate spaceSchema
+spaceSchema --> controller : coworkingSpace
+deactivate spaceSchema
+
+alt !coworkingSpace
+    controller -> errHandler : next(new ErrorResponse(MSG.COWORKING_SPACE_NOT_FOUND, 404))
+    activate errHandler
+    errHandler --> user : 404 Not Found\n({ success: false, message })
+    deactivate errHandler
+else coworkingSpace exists
+    controller -> reservationSchema : find({ user: req.user.id })
+    activate reservationSchema
+    reservationSchema --> controller : existedReservations
+    deactivate reservationSchema
+
+    alt existedReservations.length >= 3 && req.user.role != "admin"
+        controller -> errHandler : next(new ErrorResponse(MSG.RESERVATION_LIMIT, 400))
+        activate errHandler
+        errHandler --> user : 400 Bad Request\n({ success: false, message })
+        deactivate errHandler
+    else within quota or role == "admin"
+        controller -> reservationSchema : create(req.body)
+
+        alt ValidationError or Duplicate Booking (code 11000)
+            reservationSchema --> controller : throw error
+            controller -> errHandler : next(error)
+            activate errHandler
+            note right of errHandler : Sets statusCode = 400\n(ValidationError or COWORKING_SPACE_ALREADY_RESERVED)
+            errHandler --> user : 400 Bad Request\n({ success: false, message })
+            deactivate errHandler
+        else valid
+            reservationSchema --> controller : reservation
+            controller --> user : 201 Created\n({ success: true, data: reservation })
+        end
+    end
+end
+
+deactivate controller
+@enduml

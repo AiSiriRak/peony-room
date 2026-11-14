@@ -1,0 +1,29 @@
+@startuml Co-working Space Usecase Diagram
+left to right direction
+skinparam linetype polyline
+
+actor "User" as user
+actor "Admin" as admin
+
+rectangle "Co-working Space Reservation System" {
+    usecase "Register" as usecase1
+    usecase "Login" as usecase2
+    usecase "View / Search Co-working Spaces" as usecase3
+    usecase "Create Reservation" as usecase4
+    usecase "View Reservations" as usecase5
+    usecase "Update Reservation" as usecase6
+    usecase "Cancel Reservation" as usecase7
+    usecase "Manage Co-working Spaces" as usecase8
+}
+
+user --> usecase1
+user --> usecase2
+user --> usecase3
+user --> usecase4
+user --> usecase5
+user --> usecase6
+user --> usecase7
+
+admin --|> user
+admin --> usecase8
+@enduml

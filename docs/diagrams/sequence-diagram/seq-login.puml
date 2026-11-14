@@ -1,0 +1,54 @@
+@startuml Login Sequence
+autonumber
+
+actor "User" as user
+participant "AuthController" as controller
+participant "User" as userSchema
+participant "ErrorHandler" as errHandler
+
+user -> controller : POST /api/v1/auth/login\n(email, password)
+activate controller
+
+alt !email || !password
+    controller -> errHandler : next(new ErrorResponse(MSG.MISSING_CREDENTIALS, 400))
+    activate errHandler
+    errHandler --> user : 400 Bad Request\n({ success: false, message })
+deactivate errHandler
+else credentials provided
+controller -> userSchema : findOne({ email }).select('+password')
+    activate userSchema
+    userSchema --> controller : user
+    deactivate userSchema
+
+    alt !user
+        controller -> errHandler : next(new ErrorResponse(MSG.INVALID_CREDENTIALS, 401))
+        activate errHandler
+        errHandler --> user : 401 Unauthorized\n({ success: false, message })
+        deactivate errHandler
+    else user exists
+        controller -> userSchema : matchPassword(password)
+        activate userSchema
+        userSchema --> controller : isMatch
+        deactivate userSchema
+
+        alt !isMatch
+            controller -> errHandler : next(new ErrorResponse(MSG.INVALID_CREDENTIALS, 401))
+            activate errHandler
+            errHandler --> user : 401 Unauthorized\n({ success: false, message })
+            deactivate errHandler
+        else isMatch == true
+            controller -> controller : sendTokenResponse(user, 200, res)
+            activate controller
+            controller -> userSchema : getSignedJwtToken()
+            activate userSchema
+            userSchema --> controller : token
+            deactivate userSchema
+
+            controller --> user : 200 OK\n(cookie + { success: true, token })
+            deactivate controller
+        end
+    end
+end
+
+deactivate controller
+@enduml

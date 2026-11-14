@@ -1,0 +1,60 @@
+@startuml Update Reservation Sequence
+autonumber
+
+actor "User" as user
+participant "ReservationController" as controller
+participant "Reservation" as reservationSchema
+participant "ErrorHandler" as errHandler
+
+user -> controller : PUT /api/v1/reservations/:id\n(JWT Token, updateData)
+activate controller
+
+controller -> reservationSchema : findById(req.params.id)
+activate reservationSchema
+
+alt CastError (Invalid ObjectId)
+    reservationSchema --> controller : throw CastError
+    deactivate reservationSchema
+    controller -> errHandler : next(error)
+    activate errHandler
+    note right of errHandler : Sets statusCode = 400\n(MSG.WRONG_OBJECT_ID_FORMAT)
+    errHandler --> user : 400 Bad Request\n({ success: false, message })
+    deactivate errHandler
+else valid ID format
+    reservationSchema --> controller : reservation
+    deactivate reservationSchema
+
+    alt !reservation
+        controller -> errHandler : next(new ErrorResponse(MSG.RESERVATION_NOT_FOUND, 404))
+        activate errHandler
+        errHandler --> user : 404 Not Found\n({ success: false, message })
+        deactivate errHandler
+    else reservation exists
+        alt reservation.user != req.user.id && req.user.role != "admin"
+            controller -> errHandler : next(new ErrorResponse(MSG.NOT_RESOURCE_OWNER, 403))
+            activate errHandler
+            errHandler --> user : 403 Forbidden\n({ success: false, message })
+            deactivate errHandler
+        else authorized (owner or admin)
+            controller -> reservationSchema : findByIdAndUpdate(id, req.body, { new: true, runValidators: true })
+            activate reservationSchema
+
+            alt ValidationError or Duplicate Booking (code 11000)
+                reservationSchema --> controller : throw error
+                deactivate reservationSchema
+                controller -> errHandler : next(error)
+                activate errHandler
+                note right of errHandler : Sets statusCode = 400\n(ValidationError or COWORKING_SPACE_ALREADY_RESERVED)
+                errHandler --> user : 400 Bad Request\n({ success: false, message })
+                deactivate errHandler
+            else valid
+                reservationSchema --> controller : reservation
+                deactivate reservationSchema
+                controller --> user : 200 OK\n({ success: true, data: reservation })
+            end
+        end
+    end
+end
+
+deactivate controller
+@enduml
