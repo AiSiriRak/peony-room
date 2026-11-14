@@ -39,6 +39,23 @@ export const login = async (email, password) => {
   return response.data;
 };
 
+export const logout = async (email, password) => {
+  const token = localStorage.getItem("token");
+  try {
+    if (token) {
+      await axios.post(
+        `${BACKEND_URL}/logout`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+    }
+  } catch (error) {
+    console.error("Logout request failed:", error);
+  } finally {
+    localStorage.removeItem("token");
+  }
+};
+
 export const getMe = async () => {
   const token = localStorage.getItem("token");
   const headers = {};

@@ -4,7 +4,7 @@ import { Button } from "../components/Button";
 import { useEffect, useState } from "react";
 import { getCoworkingSpaces } from "../features/coworkingspaces";
 import { TextInput } from "../components/TextInput";
-import { getMe } from "../features/auth";
+import { getMe, logout } from "../features/auth";
 import { getLineLink } from "../features/line";
 
 function Home() {
@@ -57,6 +57,20 @@ function Home() {
           hideShadow={true}
         >
           To login
+        </Button>
+        <Button
+          fullRound={true}
+          onClick={async () => {
+            try {
+              await logout();
+              navigate("/login");
+            } catch (error) {
+              console.error("Error logout: ", error);
+            }
+          }}
+          hideShadow={true}
+        >
+          Logout
         </Button>
         <p> to invitaion</p>
         <TextInput

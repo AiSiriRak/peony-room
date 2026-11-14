@@ -82,7 +82,6 @@ const reminderBubble = (to, coworkingSpace, reservation, days) => {
         'Reminder',
         `${days === 0 ? 'Today is the reservation date!' : `Reservation in ${days} day${days === 1 ? '' : 's'}`}`,
         `${FRONTEND_URL}/reservations/${reservation._id}`,
-        'Details',
     );
 };
 
@@ -97,7 +96,6 @@ const reservationBubble = (to, coworkingSpace, reservation, action) => {
         'New update of reservation',
         `Your reservation has been ${action}!`,
         `${FRONTEND_URL}/reservations/${reservation._id}`,
-        'Details',
     );
 };
 
@@ -140,34 +138,9 @@ const notiBubble = async (
     headerTxt,
     descriptionTxt,
     detailLink = `${FRONTEND_URL}/coworking-spaces`,
-
-    buttonTxt = 'Details',
-    declineLink,
 ) => {
     try {
-        const footerButtons = [
-            detailLink && {
-                type: 'button',
-                action: {
-                    type: 'uri',
-                    label: buttonTxt,
-                    uri: detailLink,
-                },
-            },
-            declineLink && {
-                type: 'button',
-                action: {
-                    type: 'uri',
-                    label: 'Decline',
-                    uri: declineLink,
-                },
-            },
-        ].filter(Boolean);
-
-        return await // TEMP, MUST BE REPLACED WITH BELOW 2 LINES (For eco purpose)
-        // getClient().replyMessage({
-        // replyToken,
-        getClient().pushMessage({
+        return await getClient().pushMessage({
             to,
             messages: [
                 {
@@ -258,7 +231,16 @@ const notiBubble = async (
                         footer: {
                             type: 'box',
                             layout: 'vertical',
-                            contents: footerButtons,
+                            contents: [
+                                {
+                                    type: 'button',
+                                    action: {
+                                        type: 'uri',
+                                        label: 'Details',
+                                        uri: detailLink,
+                                    },
+                                },
+                            ],
                         },
                     },
                 },

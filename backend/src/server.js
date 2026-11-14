@@ -63,7 +63,7 @@ app.use(`${API_VER}/line`, lineRoutes);
 app.use(errorHandler);
 
 // Init line reminder worker
-// initReminderWorker();
+initReminderWorker();
 
 const PORT = process.env.PORT || 5000;
 const server = app.listen(
@@ -75,8 +75,6 @@ const server = app.listen(
         PORT,
     ),
 );
-
-// startReminderJob();
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err, _promise) => {
