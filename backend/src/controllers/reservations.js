@@ -1,8 +1,6 @@
 const CoworkingSpace = require('../models/CoworkingSpace');
 const Reservation = require('../models/Reservation');
 const Invitation = require('../models/Invitation');
-const User = require('../models/User');
-
 const { ErrorResponse, MSG } = require('../utils/error');
 const { reservationBubble, getRecipientLineIds } = require('../utils/line');
 
@@ -159,19 +157,19 @@ exports.createReservation = async (req, res, next) => {
         const reservation = await Reservation.create(req.body);
 
         // LINE Message for user login with LINE
-        // const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
-        // if (lineUserIds.length > 0) {
-        //     lineUserIds.forEach((lineUserId) => {
-        //         reservationBubble(
-        //             lineUserId,
-        //             coworkingSpace,
-        //             reservation,
-        //             'created',
-        //         ).catch((err) =>
-        //             console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
-        //         );
-        //     });
-        // }
+        const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
+        if (lineUserIds.length > 0) {
+            lineUserIds.forEach((lineUserId) => {
+                reservationBubble(
+                    lineUserId,
+                    coworkingSpace,
+                    reservation,
+                    'created',
+                ).catch((err) =>
+                    console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
+                );
+            });
+        }
 
         res.status(201).json({
             success: true,
@@ -214,22 +212,22 @@ exports.updateReservation = async (req, res, next) => {
         );
 
         // LINE Message for user login with LINE
-        // const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
-        // if (lineUserIds.length > 0) {
-        //     const coworkingSpace = await CoworkingSpace.findById(
-        //         reservation.coworkingSpace,
-        //     );
-        //     lineUserIds.forEach((lineUserId) => {
-        //         reservationBubble(
-        //             lineUserId,
-        //             coworkingSpace,
-        //             reservation,
-        //             'updated',
-        //         ).catch((err) =>
-        //             console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
-        //         );
-        //     });
-        // }
+        const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
+        if (lineUserIds.length > 0) {
+            const coworkingSpace = await CoworkingSpace.findById(
+                reservation.coworkingSpace,
+            );
+            lineUserIds.forEach((lineUserId) => {
+                reservationBubble(
+                    lineUserId,
+                    coworkingSpace,
+                    reservation,
+                    'updated',
+                ).catch((err) =>
+                    console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
+                );
+            });
+        }
 
         res.status(200).json({
             success: true,
@@ -272,22 +270,22 @@ exports.deleteReservation = async (req, res, next) => {
         await reservation.deleteOne();
 
         // LINE Message for user login with LINE
-        // const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
-        // if (lineUserIds.length > 0) {
-        //     const coworkingSpace = await CoworkingSpace.findById(
-        //         reservation.coworkingSpace,
-        //     );
-        //     lineUserIds.forEach((lineUserId) => {
-        //         reservationBubble(
-        //             lineUserId,
-        //             coworkingSpace,
-        //             reservation,
-        //             'deleted',
-        //         ).catch((err) =>
-        //             console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
-        //         );
-        //     });
-        // }
+        const lineUserIds = await getRecipientLineIds(reservation, req.user.id);
+        if (lineUserIds.length > 0) {
+            const coworkingSpace = await CoworkingSpace.findById(
+                reservation.coworkingSpace,
+            );
+            lineUserIds.forEach((lineUserId) => {
+                reservationBubble(
+                    lineUserId,
+                    coworkingSpace,
+                    reservation,
+                    'deleted',
+                ).catch((err) =>
+                    console.error(MSG.CANT_SEND_LINE_MSG(lineUserId), err),
+                );
+            });
+        }
 
         res.status(200).json({
             success: true,

@@ -55,6 +55,22 @@ exports.login = async (req, res, next) => {
     }
 };
 
+// @desc    Logout user
+// @route   POST /api/v1/auth/logout
+// @access  Public
+exports.logout = async (req, res, next) => {
+    try {
+        res.status(200)
+            .clearCookie('token', {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+            })
+            .json({ success: true, data: {} });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
     // Create token

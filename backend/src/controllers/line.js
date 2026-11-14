@@ -1,10 +1,9 @@
 const crypto = require('crypto');
 const mongoose = require('mongoose');
-
 const User = require('../models/User');
 const { replyText, ADD_LINE_LINK } = require('../utils/line');
-const { respondInvitation } = require('./invitations');
 const { ErrorResponse } = require('../utils/error');
+const { respondInvitation } = require('./invitations');
 
 // @route   POST /api/v1/line/link-code
 // @access  Private
