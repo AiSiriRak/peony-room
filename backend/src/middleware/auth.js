@@ -14,7 +14,7 @@ exports.protect = async (req, res, next) => {
     }
 
     // Make sure token exists
-    if (!token) {
+    if (!token || token == 'null') {
         return next(new ErrorResponse(MSG.NOT_AUTHORIZED, 401));
     }
 
