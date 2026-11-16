@@ -7,7 +7,7 @@ actor "Admin" as admin
 
 rectangle "Co-working Space Reservation System" {
     usecase "Register" as usecase1
-    usecase "Login" as usecase2
+    usecase "Login / Logout" as usecase2
     usecase "View / Search Co-working Spaces" as usecase3
     usecase "Create Reservation" as usecase4
     usecase "View Reservations" as usecase5
