@@ -424,6 +424,121 @@
                             "response": []
                         }
                     ]
+                },
+                {
+                    "name": "Logout",
+                    "item": [
+                        {
+                            "name": "Logout - User 1",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test(\"Logout success, 200 OK\", function () {\r\n    pm.expect(pm.response.code).to.equal(200);\r\n\r\n    const responseBody = pm.response.json();\r\n    pm.expect(responseBody.success).to.be.true;\r\n});\r\n\r\npm.collectionVariables.set(\"user1Token\", null);"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{user1Token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{URL}}/auth/logout",
+                                    "host": ["{{URL}}"],
+                                    "path": ["auth", "logout"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Get Me - After Logout",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "type": "text/javascript",
+                                        "exec": [
+                                            "pm.test(\"Get current user after logout, 401 Unauthorized\", function () {\n    pm.expect(pm.response.code).to.equal(401);\n});\n\npm.test(\"Error message: not authorized\", function () {\n  const responseBody = pm.response.json();\n\n  pm.expect(responseBody.message).to.equal(\"Not authorize to access this route\");\n});"
+                                        ]
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "auth": {
+                                    "type": "bearer",
+                                    "bearer": [
+                                        {
+                                            "key": "token",
+                                            "value": "{{user1Token}}",
+                                            "type": "string"
+                                        }
+                                    ]
+                                },
+                                "method": "GET",
+                                "header": [],
+                                "url": {
+                                    "raw": "{{URL}}/auth/me",
+                                    "host": ["{{URL}}"],
+                                    "path": ["auth", "me"]
+                                }
+                            },
+                            "response": []
+                        },
+                        {
+                            "name": "Login - Build - User 1",
+                            "event": [
+                                {
+                                    "listen": "test",
+                                    "script": {
+                                        "exec": [
+                                            "pm.test(\"Login success, 200 OK\", function () {",
+                                            "  pm.expect(pm.response.code).to.equal(200);",
+                                            "});",
+                                            "",
+                                            "if (pm.response.code === 200) {",
+                                            "  const responseBody = pm.response.json();",
+                                            "  pm.collectionVariables.set(\"user1Token\", responseBody.token);",
+                                            "}"
+                                        ],
+                                        "type": "text/javascript",
+                                        "packages": {},
+                                        "requests": {}
+                                    }
+                                }
+                            ],
+                            "request": {
+                                "method": "POST",
+                                "header": [],
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"email\": \"{{user1Email}}\",\n  \"password\": \"{{allUserPassword}}\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "language": "json"
+                                        }
+                                    }
+                                },
+                                "url": {
+                                    "raw": "{{URL}}/auth/login",
+                                    "host": ["{{URL}}"],
+                                    "path": ["auth", "login"]
+                                }
+                            },
+                            "response": []
+                        }
+                    ]
                 }
             ]
         },

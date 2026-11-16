@@ -56,7 +56,7 @@ exports.login = async (req, res, next) => {
 };
 
 // @desc    Logout user
-// @route   POST /api/v1/auth/logout
+// @route   GET /api/v1/auth/logout
 // @access  Public
 exports.logout = async (req, res, next) => {
     try {
