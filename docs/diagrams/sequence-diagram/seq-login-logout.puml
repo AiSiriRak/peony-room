@@ -6,6 +6,8 @@ participant "AuthController" as controller
 participant "User" as userSchema
 participant "ErrorHandler" as errHandler
 
+== Login ==
+
 user -> controller : POST /api/v1/auth/login\n(email, password)
 activate controller
 
@@ -13,9 +15,9 @@ alt !email || !password
     controller -> errHandler : next(new ErrorResponse(MSG.MISSING_CREDENTIALS, 400))
     activate errHandler
     errHandler --> user : 400 Bad Request\n({ success: false, message })
-deactivate errHandler
+    deactivate errHandler
 else credentials provided
-controller -> userSchema : findOne({ email }).select('+password')
+    controller -> userSchema : findOne({ email }).select('+password')
     activate userSchema
     userSchema --> controller : user
     deactivate userSchema
@@ -49,6 +51,17 @@ controller -> userSchema : findOne({ email }).select('+password')
         end
     end
 end
+
+deactivate controller
+
+== Logout ==
+
+user -> controller : POST /api/v1/auth/logout
+activate controller
+
+controller -> controller : res.cookie('token', 'none',\n{ expires: Date.now() + 10s, httpOnly: true })
+
+controller --> user : 200 OK\n({ success: true, data: {} })
 
 deactivate controller
 @enduml
