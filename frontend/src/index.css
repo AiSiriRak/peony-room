@@ -6,10 +6,12 @@
 :root {
   /* Colors */
   --color-primary-pink: #f299e6;
-  --color-light-pink: #ffdbfa;
+  --color-light-pink: #ffecfc;
   --color-dark-pink: #b55ea9;
 
-  --color-black: #1f1e22;
+  --color-red: #cb2636;
+
+  --color-black: #2f0832;
   --color-white: #ffffff;
   --color-gray: #f4f4f4;
   --color-dark-gray: #c3c3c3;
@@ -48,7 +50,10 @@
 
   /* Colors */
   --color-primary-pink: var(--color-primary-pink);
+  --color-light-pink: var(--color-light-pink);
   --color-dark-pink: var(--color-dark-pink);
+
+  --color-red: var(--color-red);
 
   --color-black: var(--color-black);
   --color-white: var(--color-white);

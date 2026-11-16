@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Invitation from "./pages/Invitation";
 import Home from "./pages/Home";
 import CoworkingSpace from "./pages/CoworkingSpace";
 import Login from "./pages/Login";
@@ -10,9 +9,8 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/invitation/:invitationId" element={<Invitation />} />
       <Route
-        path="/coworking-space/:coworkingspaceId"
+        path="/coworking-spaces/:coworkingspaceId"
         element={<CoworkingSpace />}
       />
 

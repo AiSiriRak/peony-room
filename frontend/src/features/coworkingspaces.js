@@ -2,8 +2,8 @@ import axios from "axios";
 
 const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/coworking-spaces`;
 
-export const getCoworkingSpaces = async () => {
-  const response = await axios.get(BACKEND_URL);
+export const getCoworkingSpace = async (coworkingSpaceID) => {
+  const response = await axios.get(`${BACKEND_URL}/${coworkingSpaceID}`);
 
-  return response.data;
+  return response.data.data;
 };
