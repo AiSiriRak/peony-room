@@ -2,29 +2,6 @@ import axios from "axios";
 
 const BACKEND_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
 
-export const register = async (
-  name,
-  telephoneNumber,
-  email,
-  password,
-  role,
-) => {
-  const response = await axios.post(`${BACKEND_URL}/register`, {
-    name: name,
-    telephoneNumber: telephoneNumber,
-    email: email,
-    password: password,
-    role: role,
-  });
-
-  const token = response.data.token || response.data.data?.token;
-  if (token) {
-    localStorage.setItem("token", token);
-  }
-
-  return response.data;
-};
-
 export const login = async (email, password) => {
   const response = await axios.post(`${BACKEND_URL}/login`, {
     email: email,
@@ -39,7 +16,7 @@ export const login = async (email, password) => {
   return response.data;
 };
 
-export const logout = async (email, password) => {
+export const logout = async () => {
   const token = localStorage.getItem("token");
   try {
     if (token) {

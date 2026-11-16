@@ -2,7 +2,6 @@ import { useNavigate } from "react-router-dom";
 
 import { Button } from "../components/Button";
 import { useEffect, useState } from "react";
-import { getCoworkingSpaces } from "../features/coworkingspaces";
 import { TextInput } from "../components/TextInput";
 import { getMe, logout } from "../features/auth";
 import { getLineLink } from "../features/line";
@@ -12,9 +11,7 @@ function Home() {
 
   const [user, setUser] = useState(null);
 
-  const [coSpace, setCoSpace] = useState(null);
   const [coSpaceId, setCoSpaceId] = useState("");
-  const [invitationId, setInvitationId] = useState("");
   const [link, setLink] = useState("");
 
   useEffect(() => {
@@ -33,31 +30,51 @@ function Home() {
 
   return (
     <div className="w-screen h-dvh flex justify-center items-center">
-      <div className="w-full flex flex-col justify-center items-center h-full gap-5">
-        <div>User : {user?.name}</div>
-        <div>Email : {user?.email}</div>
-        <Button
-          fullRound={true}
-          onClick={async () => {
-            try {
-              const res = await getLineLink();
-              setLink(res.code);
-            } catch (error) {
-              console.error("Error get LINE link:", error);
-            }
-          }}
-          hideShadow={true}
-        >
-          Get Link
-        </Button>
-        <p>{link}</p>
-        <Button
-          fullRound={true}
-          onClick={() => navigate("/login")}
-          hideShadow={true}
-        >
-          To login
-        </Button>
+      <div className="w-full flex flex-col justify-center items-center h-full gap-5 overflow-auto py-10">
+        {user && (
+          <div className="flex-1 justify-center items-center m-10">
+            <div className="text-h1 text-center">User : {user?.name}</div>
+            <div className="text-h3 text-center">Email : {user?.email}</div>
+          </div>
+        )}
+        {user && (
+          <div className="flex-1 justify-center items-center">
+            <Button
+              fullRound={true}
+              onClick={async () => {
+                try {
+                  const res = await getLineLink();
+                  setLink(res.code);
+                } catch (error) {
+                  console.error("Error get LINE link:", error);
+                }
+              }}
+              hideShadow={true}
+            >
+              Get LINE Link
+            </Button>
+            <p className="text-center text-h2">{link}</p>
+          </div>
+        )}
+        <div className="flex-1 flex flex-col justify-center items-center gap-2">
+          <p> to coworking details</p>
+          <TextInput
+            value={coSpaceId}
+            onChange={setCoSpaceId}
+            placeholder="Enter co-space id"
+            className="w-80"
+          />
+          <Button
+            fullRound={true}
+            onClick={() => {
+              if (coSpaceId.trim() != "")
+                navigate(`/coworking-spaces/${coSpaceId.trim()}`);
+            }}
+            hideShadow={true}
+          >
+            to co-working space
+          </Button>
+        </div>
         <Button
           fullRound={true}
           onClick={async () => {
@@ -70,59 +87,8 @@ function Home() {
           }}
           hideShadow={true}
         >
-          Logout
+          {user ? "Logout" : "To Login page"}
         </Button>
-        <p> to invitaion</p>
-        <TextInput
-          value={invitationId}
-          onChange={setInvitationId}
-          placeholder="Enter co-space id"
-          className="w-80"
-        />
-        <Button
-          fullRound={true}
-          onClick={() => {
-            if (invitationId.trim() != "")
-              navigate(`/invitation/${invitationId.trim()}`);
-          }}
-          hideShadow={true}
-        >
-          to invitaion
-        </Button>
-        <p> to coworking details</p>
-        <TextInput
-          value={coSpaceId}
-          onChange={setCoSpaceId}
-          placeholder="Enter co-space id"
-          className="w-80"
-        />
-        <Button
-          fullRound={true}
-          onClick={() => {
-            if (coSpaceId.trim() != "")
-              navigate(`/coworking-space/${coSpaceId.trim()}`);
-          }}
-          hideShadow={true}
-        >
-          to co-working space
-        </Button>
-        <Button
-          fullRound={true}
-          onClick={async () => {
-            try {
-              const data = await getCoworkingSpaces();
-              setCoSpace(data);
-            } catch (error) {
-              console.error("Error fetching spaces:", error);
-            }
-          }}
-          hideShadow={true}
-        >
-          Get Co-working Spaces
-        </Button>
-        <div className="h-50 overflow-auto bg-white">
-          {coSpace ? JSON.stringify(coSpace, null, 2) : "No data fetched yet"}
-        </div>
       </div>
     </div>
   );
