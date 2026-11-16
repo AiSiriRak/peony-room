@@ -128,7 +128,6 @@ const handlePostback = async (event) => {
     );
 };
 
-// @route   POST /api/v1/line/webhook
 exports.handleWebhook = async (req, res) => {
     try {
         await Promise.all(req.body.events.map(handleEvent));
