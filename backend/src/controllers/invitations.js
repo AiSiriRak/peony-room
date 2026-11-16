@@ -3,7 +3,7 @@ const CoworkingSpace = require('../models/CoworkingSpace');
 const Reservation = require('../models/Reservation');
 const Invitation = require('../models/Invitation');
 const { ErrorResponse, MSG } = require('../utils/error');
-const { inviteBubble, pushText } = require('../utils/line');
+const { inviteBubble, pushMessages } = require('../utils/line');
 
 // @desc    Get all invitations
 // @route   GET /api/v1/invitations
@@ -302,10 +302,12 @@ exports.respondInvitation = async (req, res, next) => {
             const coworkingSpace = await CoworkingSpace.findById(
                 reservation.coworkingSpace,
             );
-            await pushText(
-                inviter.lineUserId,
-                `${req.user.name} has ${status} your invitation at ${coworkingSpace.name}`,
-            );
+            await pushMessages(inviter.lineUserId, [
+                {
+                    type: 'text',
+                    text: `${req.user.name} has ${status} your invitation at ${coworkingSpace.name}`,
+                },
+            ]);
         }
 
         res.status(200).json({

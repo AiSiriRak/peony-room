@@ -1,5 +1,7 @@
 const line = require('@line/bot-sdk');
+const dotenv = require('dotenv');
 const User = require('../models/User');
+dotenv.config({ path: './src/config/config.env' });
 
 const ADD_LINE_LINK = 'https://lin.ee/Qp3cqaj';
 const FRONTEND_URL = process.env.FRONTEND_TUNNEL_URL;
@@ -23,17 +25,18 @@ const getRecipientLineIds = async (reservation, mainUserId) => {
     return [...new Set(recipients.map((u) => u?.lineUserId).filter(Boolean))];
 };
 
-// For pushing normal text
-const pushText = async (to, text) => {
+// For Push message to user
+const pushMessages = async (to, messages) => {
     try {
         return await getClient().pushMessage({
             to,
-            messages: [{ type: 'text', text }],
+            messages,
         });
     } catch (error) {
         console.error(
-            'LINE Push Message Error:',
-            error.response ? error.response.data : error.message,
+            'LINE push Message Error:',
+            error.status,
+            error.body ?? error.message,
         );
         throw error;
     }
@@ -55,22 +58,6 @@ const replyText = async (replyToken, text) => {
     }
 };
 
-// For Push message to user
-const pushMessages = async (to, messages) => {
-    try {
-        return await getClient().pushMessage({
-            to,
-            messages,
-        });
-    } catch (error) {
-        console.error(
-            'LINE push Message Error:',
-            error.response ? error.response.data : error.message,
-        );
-        throw error;
-    }
-};
-
 // For sending reminder before reservation date.
 // Use in this format :
 // reminderBubble({UserLineId}, coworkingSpace data, reservation data, 3)
@@ -81,7 +68,7 @@ const reminderBubble = (to, coworkingSpace, reservation, days) => {
         reservation,
         'Reminder',
         `${days === 0 ? 'Today is the reservation date!' : `Reservation in ${days} day${days === 1 ? '' : 's'}`}`,
-        `${FRONTEND_URL}/reservations/${reservation._id}`,
+        `${FRONTEND_URL}/coworking-spaces/${coworkingSpace._id}`,
     );
 };
 
@@ -95,13 +82,13 @@ const reservationBubble = (to, coworkingSpace, reservation, action) => {
         reservation,
         'New update of reservation',
         `Your reservation has been ${action}!`,
-        `${FRONTEND_URL}/reservations/${reservation._id}`,
+        `${FRONTEND_URL}/coworking-spaces/${coworkingSpace._id}`,
     );
 };
 
 // For sending invitation to be co-booker
 // Use in this format :
-// inviteBubble({UserLineId}, coworkingSpace data, reservation data, 'Owner Name', invitation data)
+// inviteBubble({UserLineId}, invitation data)
 const inviteBubble = async (to, invitation) => {
     return pushMessages(to, [
         {
@@ -257,7 +244,6 @@ const notiBubble = async (
 
 module.exports = {
     getRecipientLineIds,
-    pushText,
     replyText,
     pushMessages,
     reminderBubble,
