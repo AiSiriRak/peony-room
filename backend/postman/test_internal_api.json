@@ -434,17 +434,10 @@
                                 {
                                     "listen": "test",
                                     "script": {
-                                        "exec": [
-                                            "pm.test(\"Logout success, 200 OK\", function () {\r",
-                                            "    pm.expect(pm.response.code).to.equal(200);\r",
-                                            "\r",
-                                            "    const responseBody = pm.response.json();\r",
-                                            "    pm.expect(responseBody.success).to.be.true;\r",
-                                            "});"
-                                        ],
                                         "type": "text/javascript",
-                                        "packages": {},
-                                        "requests": {}
+                                        "exec": [
+                                            "pm.test(\"Logout success, 200 OK\", function () {\r\n    pm.expect(pm.response.code).to.equal(200);\r\n\r\n    const responseBody = pm.response.json();\r\n    pm.expect(responseBody.success).to.be.true;\r\n});\r\n\r\npm.collectionVariables.set(\"user1Token\", null);"
+                                        ]
                                     }
                                 }
                             ],
@@ -459,7 +452,7 @@
                                         }
                                     ]
                                 },
-                                "method": "POST",
+                                "method": "GET",
                                 "header": [],
                                 "url": {
                                     "raw": "{{URL}}/auth/logout",
@@ -475,14 +468,10 @@
                                 {
                                     "listen": "test",
                                     "script": {
-                                        "exec": [
-                                            "pm.test(\"Get current user after logout, 200 OK\", function () {",
-                                            "    pm.expect(pm.response.code).to.equal(200);",
-                                            "});"
-                                        ],
                                         "type": "text/javascript",
-                                        "packages": {},
-                                        "requests": {}
+                                        "exec": [
+                                            "pm.test(\"Get current user after logout, 401 Unauthorized\", function () {\n    pm.expect(pm.response.code).to.equal(401);\n});\n\npm.test(\"Error message: not authorized\", function () {\n  const responseBody = pm.response.json();\n\n  pm.expect(responseBody.message).to.equal(\"Not authorize to access this route\");\n});"
+                                        ]
                                     }
                                 }
                             ],
