@@ -28,9 +28,9 @@ Execution workflows between the Client, Controller, Database Schema, and Central
 
   ![Register Sequence](./images/seq-register.png)
 
-* **Login**
+* **Login / Logout**
 
-  ![Login Sequence](./images/seq-login.png)
+  ![Login / Logout Sequence](./images/seq-login-logout.png)
 
 ### 3.2 Co-working Spaces
 
