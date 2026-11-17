@@ -1,4 +1,4 @@
-@startuml Login Sequence
+@startuml Login / Logout Sequence
 autonumber
 
 actor "User" as user
@@ -56,7 +56,7 @@ deactivate controller
 
 == Logout ==
 
-user -> controller : POST /api/v1/auth/logout
+user -> controller : GET /api/v1/auth/logout
 activate controller
 
 controller -> controller : res.cookie('token', 'none',\n{ expires: Date.now() + 10s, httpOnly: true })
